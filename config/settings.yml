@@ -1,0 +1,5 @@
+login:
+  battle_net_client_id:
+    default: ''
+  battle_net_client_secret:
+    default: ''
