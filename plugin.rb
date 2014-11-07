@@ -35,17 +35,19 @@ class BattleNetAuthenticator < ::Auth::Authenticator
   end
 
   def register_middleware(omniauth)
-    omniauth.provider :bnet, 
-      SiteSetting.battle_net_client_id, 
-      SiteSetting.battle_net_client_secret, 
-      scope: "wow.profile"
+    omniauth.provider :bnet, :setup => lambda { |env|
+      strategy = env["omniauth.strategy"]
+      strategy.options[:client_id] = SiteSetting.battle_net_client_id
+      strategy.options[:client_secret] = SiteSetting.battle_net_client_secret
+      strategy.options[:scope] = "wow.profile"
+    }
   end
 end
 
 auth_provider :title => 'Battle.net',
   :message => 'Log in via Battle.net',
-  :frame_width => 920,
-  :frame_height => 800,
+  :frame_width => 450,
+  :frame_height => 470,
   :authenticator => BattleNetAuthenticator.new
     
 register_css <<CSS
@@ -53,7 +55,7 @@ register_css <<CSS
 	background: #000000;
 	padding: 20px 10px 10px 10px;
 	border-radius: 4px;
-	margin: 0;
+	font-size: 0px;
 	width: 270px;
 	height: 70px;
 	background-repeat: no-repeat;
