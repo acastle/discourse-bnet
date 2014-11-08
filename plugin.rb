@@ -16,21 +16,15 @@ class BattleNetAuthenticator < ::Auth::Authenticator
 
     oauth2_uid = auth_token[:uid]
     data = auth_token[:info]
-    result.email = email = data[:email]
-    result.name = name = data[:name]
 
     oauth2_user_info = Oauth2UserInfo.where(uid: oauth2_uid, provider: 'bnet').first
     result.user = oauth2_user_info.try(:user)
 
-    if !result.user && !email.blank? && result.user = User.find_by_email(email)
+    if !result.user
       Oauth2UserInfo.create({ uid: oauth2_uid,
                               provider: 'bnet',
-                              name: name,
-                              email: email,
                               user_id: result.user.id })
     end
-
-    result.email_valid = true
     result
   end
 
