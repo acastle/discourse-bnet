@@ -3,7 +3,6 @@
 # version: 0.0.1
 # authors: Alex Castle
 
-require File.dirname(__FILE__) + "/../../app/models/oauth2_user_info"
 gem 'omniauth-bnet', '1.0.1'
 
 class BattleNetAuthenticator < ::Auth::Authenticator
@@ -13,21 +12,23 @@ class BattleNetAuthenticator < ::Auth::Authenticator
 
   def after_authenticate(auth_token)
     result = Auth::Result.new
-
     oauth2_uid = auth_token[:uid]
-    data = auth_token[:info]
+    current_info = ::PluginStore.get("bnet", "bnet_uid_#{oauth2_uid}")
 
-    oauth2_user_info = Oauth2UserInfo.where(uid: oauth2_uid, provider: 'bnet').first
-    result.user = oauth2_user_info.try(:user)
-
-    if !result.user
-      Oauth2UserInfo.create({ uid: oauth2_uid,
-                              provider: 'bnet',
-                              user_id: result.user.id })
-    end
+    result.user =
+      if current_info
+        User.where(id: current_info[:user_id]).first
+      end
+    
+	result.extra_data = { bnet_uid: oauth2_uid }
     result
   end
 
+  def after_create_account(user, auth)
+    data = auth[:extra_data]
+    ::PluginStore.set("bnet", "bnet_uid_#{data[:bnet_uid]}", {user_id: user.id })
+  end
+  
   def register_middleware(omniauth)
     omniauth.provider :bnet, :setup => lambda { |env|
       strategy = env["omniauth.strategy"]
